@@ -16,8 +16,17 @@
 <form method = 'post' enctype="multipart/form-data">
  {% csrf_token %}
 {{uf.as_p}}
+ <img src="/checkcode/" onclick="ChangeCode(this);">
+<br>
 <input type="submit" value = "ok233" />
 </form>
+ <script>
+     // 点击一次,更改图片内容,
+     function ChangeCode(ths){
+         console.log(ths.src);
+         ths.src = ths.src + '?';
+     }
+ </script>
 <a href="http://localhost:8000/register/">注册</a>
 </body>
 </html>

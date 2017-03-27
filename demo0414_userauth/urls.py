@@ -21,5 +21,7 @@ urlpatterns = [
     url(r'^login/$',av.login, name = 'login'),
     url(r'^register/$',av.register, name = 'register'),
     url(r'^logout/$',av.logout, name = 'logout'),
+    url(r'^checkcode/$',av.check_code, name = 'checkcode'),
     url(r'^admin/', admin.site.urls),
+
 ]

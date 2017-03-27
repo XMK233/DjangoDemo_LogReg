@@ -21,26 +21,45 @@ class UserForm(forms.Form):
 class UserFormLogin(forms.Form):
     username = forms.CharField(label='用户名', max_length=100)
     password = forms.CharField(label='密码', widget=forms.PasswordInput())
+    checkcode = forms.CharField(label='验证码')
+
+def check_code(request):
+    import io
+    import check_code as CheckCode
+    stream = io.BytesIO()
+    img, code = CheckCode.create_validate_code()
+    img.save(stream, "png")
+    request.session['checkcode'] = code
+    return HttpResponse(stream.getvalue(), "png")
 
 def login(request):
     if request.method == "POST":
         uf = UserFormLogin(request.POST)
         if uf.is_valid():
             # 获取表单信息
+            input_code = request.session['checkcode'].upper()
             username = uf.cleaned_data['username']
             password = uf.cleaned_data['password']
-            userResult = User.objects.filter(username=username, password=password)
-            # pdb.set_trace()
-            if (len(userResult) > 0):
-                response = render_to_response('Success.html',
-                                              {'operation': "登录", 'username': username},
+            checkcode = uf.cleaned_data['checkcode'].upper()
+
+            if input_code == checkcode:
+
+                userResult = User.objects.filter(username=username, password=password)
+                # pdb.set_trace()
+                if (len(userResult) > 0):
+                    response = render_to_response('Success.html',
+                                                  {'operation': "登录", 'username': username},
+                                                  context_instance=RequestContext(request))
+                    response.set_cookie('username',username,60)
+                    return response
+                else:
+                    #return HttpResponse("该用户不存在")
+                    return render_to_response('register.html',
+                                              {"errors": "该用户不存在"},
                                               context_instance=RequestContext(request))
-                response.set_cookie('username',username,60)
-                return response
             else:
-                #return HttpResponse("该用户不存在")
                 return render_to_response('register.html',
-                                          {"errors": "该用户不存在"},
+                                          {"errors": "请输入验证码"},
                                           context_instance=RequestContext(request))
     else:
         uf = UserFormLogin()
@@ -89,7 +108,6 @@ def register(request):
     return render_to_response('register.html', {'uf': uf}, context_instance=RequestContext(request))
 
 def logout(request):
-    #HttpResponse('退出啦 !!')
     nm = request.COOKIES.get('username')
     response = render_to_response('Success.html',
                                   {'operation': "退出", 'username': nm},
